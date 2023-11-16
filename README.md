@@ -7,11 +7,15 @@
   - O usar un package manager como nvm, etc: https://nodejs.org/en/download/package-manager
 
 ## Configuracion
-Setear los valores de la configuración en los archivos .env de cada servicio:
-- path-to-app\event_driven_arch\apps\loans-service
-- path-to-app\event_driven_arch\apps\notifications-service
+Setear los valores de la configuración en los archivos .env en el root de cada servicio:
+- `path-to-app\event_driven_arch\apps\loans-service\.env`
+- `path-to-app\event_driven_arch\apps\notifications-service\.env`
 
 Los valores a setear se puede ver en el archivo `env.template`
+
+## Instalar dependencias
+
+- Correr `npm i` en el root del workspace `path-to-app\event_driven_arch\`
 
 ## Correr los servicios
 
