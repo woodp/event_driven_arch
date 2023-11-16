@@ -8,7 +8,13 @@ export class AppService {
 
   async createLoan() {
     console.log('Create loan....');
-    await this.notificationsQueue.add({ message: 'Loan crated' });
+    await this.notificationsQueue.add(
+      {
+        message: 'Loan crated',
+        status: 'succeed',
+        delay: 100,
+      }
+    );
     console.log('Loan created');
   }
 

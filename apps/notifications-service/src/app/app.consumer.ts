@@ -8,7 +8,7 @@ export class AppConsumer {
 
     @Process()
     async handleNotifications(job: Job<unknown>) {
-      console.log('got here')
+      console.log(`${JSON.stringify(job)}`)
       this.logger.log(`Notification proccessed ${JSON.stringify(job.data)}`)
     }
 }
