@@ -8,17 +8,15 @@ export class AppService {
 
   async createLoan() {
     console.log('Create loan....');
-    await this.notificationsQueue.add(
+    const queueElement = await this.notificationsQueue.add(
       {
-        message: 'Loan crated',
+        message: 'Loan created',
         status: 'succeed',
         delay: 100,
       }
     );
     console.log('Loan created');
+    console.log(`${JSON.stringify(queueElement)}`);
   }
 
-  getData(): { message: string } {
-    return { message: 'Hello API' };
-  }
 }

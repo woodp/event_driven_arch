@@ -13,9 +13,9 @@ describe('AppService', () => {
     service = app.get<AppService>(AppService);
   });
 
-  describe('getData', () => {
-    it('should return "Hello API"', () => {
-      expect(service.getData()).toEqual({ message: 'Hello API' });
+  describe('createLoan', () => {
+    it('should return a queue element', () => {
+      expect(service.createLoan()).toEqual({ message: 'TO DO' });
     });
   });
 });
