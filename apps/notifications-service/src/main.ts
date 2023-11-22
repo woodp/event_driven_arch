@@ -5,18 +5,31 @@
 
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-
 import { AppModule } from './app/app.module';
+import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  const globalPrefix = 'api';
-  app.setGlobalPrefix(globalPrefix);
-  const port = process.env.PORT || 3000;
-  await app.listen(port);
-  Logger.log(
-    `🚀 Application is running on: http://localhost:${port}/${globalPrefix}`
+
+  const user = process.env.RABBITMQ_USER;
+  const password = process.env.RABBITMQ_PASSWORD;
+  const host = process.env.RABBITMQ_HOST;
+  const queueName = process.env.RABBITMQ_QUEUE_NAME;
+
+  const app = await NestFactory.createMicroservice<MicroserviceOptions>(
+    AppModule,
+    {
+      transport: Transport.RMQ,
+      options: {
+        urls: [`amqp://${user}:${password}@${host}`],
+        queue: queueName,
+        queueOptions: {
+          durable: true,
+        },
+      },
+    },
   );
+  await app.listen();
+  Logger.log('Token service started');
 }
 
 bootstrap();

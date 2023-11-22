@@ -9,5 +9,6 @@ export class AppController {
   @Post()
   createLoan() {
     this.appService.createLoan();
+    return { success: true };
   }
 }
