@@ -6,30 +6,23 @@
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app/app.module';
-import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { MicroserviceOptions } from '@nestjs/microservices';
+import { queueOptions } from '@event-driven-arch/common';
 
 async function bootstrap() {
 
   const user = process.env.RABBITMQ_USER;
   const password = process.env.RABBITMQ_PASSWORD;
   const host = process.env.RABBITMQ_HOST;
-  const queueName = process.env.RABBITMQ_QUEUE_NAME;
+
+  queueOptions.notifications.options.urls = [`amqp://${user}:${password}@${host}`];
 
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(
     AppModule,
-    {
-      transport: Transport.RMQ,
-      options: {
-        urls: [`amqp://${user}:${password}@${host}`],
-        queue: queueName,
-        queueOptions: {
-          durable: true,
-        },
-      },
-    },
+    queueOptions.notifications,
   );
   await app.listen();
-  Logger.log('Token service started');
+  Logger.log('Notifications service started');
 }
 
 bootstrap();

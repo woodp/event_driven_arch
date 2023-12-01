@@ -1,46 +1,21 @@
 import { Module } from '@nestjs/common';
-
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { BullModule } from '@nestjs/bull';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { ClientsModule, Transport } from '@nestjs/microservices';
+import { ConfigModule } from '@nestjs/config';
+import { ClientsModule } from '@nestjs/microservices';
+import { queueOptions } from '@event-driven-arch/common';
+
+const user = process.env.RABBITMQ_USER;
+const password = process.env.RABBITMQ_PASSWORD;
+const host = process.env.RABBITMQ_HOST;
+
+queueOptions.notifications.options.urls = [`amqp://${user}:${password}@${host}`];
+queueOptions.notifications.options.noAck = true; // this is to fix a stupid behaviour of RabbitMQ
 
 @Module({
   imports: [
     ConfigModule.forRoot(),
-    ClientsModule.registerAsync([
-      {
-        name: 'NOTIFICATIONS_SERVICE',
-        imports: [ConfigModule],
-        useFactory: (configService: ConfigService) => ({
-          transport: Transport.RMQ,
-          options: {
-            urls: [`amqp://${configService.getOrThrow('RABBITMQ_USER')}:${configService.getOrThrow('RABBITMQ_PASSWORD')}@${configService.getOrThrow('RABBITMQ_HOST')}`],
-            queue: configService.getOrThrow('RABBITMQ_QUEUE_NAME'),
-            queueOptions: {
-              durable: true,
-            },          },
-        }),
-        inject: [ConfigService],
-      },
-    ]),
-    // BullModule.forRootAsync({
-    //   imports: [ConfigModule],
-    //   useFactory: async (configService: ConfigService) =>
-    //     ({
-    //         redis: {
-    //           host: configService.getOrThrow('QUEUE_HOST'), // 'localhost',
-    //           port: configService.getOrThrow('QUEUE_PORT'), // 6379,
-    //           username: configService.getOrThrow('QUEUE_USERNAME'),
-    //           password: configService.getOrThrow('QUEUE_PASSWORD'),
-    //         },
-    //     }),
-    //     inject: [ConfigService],
-    // }),
-    // BullModule.registerQueue({
-    //   name: 'notifications',
-    // }),
+    ClientsModule.register([queueOptions.notifications]),
   ],
   controllers: [AppController],
   providers: [AppService],
