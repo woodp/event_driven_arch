@@ -7,14 +7,15 @@ export class AppController {
   constructor(private readonly appService: AppService) {}
 
   @Post()
-  async createLoan() {
-    await this.appService.createLoan();
+  async createLoan(@Body() body) {
+    await this.appService.createLoan(body.type);
     return { success: true };
   }
 
-  @Post('notifications')
-  async toggleNotifications(@Body() body) {
-    await this.appService.toggleNotifications(body);
+  @Post()
+  async createLoansBatch(@Body() body) {
+    await this.appService.createLoansBatch(body.quantity);
     return { success: true };
   }
+
 }

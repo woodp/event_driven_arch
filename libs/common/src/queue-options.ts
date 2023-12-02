@@ -20,12 +20,12 @@ const notifications: ClientProviderOptions = {
     queue: queueName,
     queueOptions: {
       durable: true,
-      // // setup the dead letter exchange to point to the default exchange
-      // deadLetterExchange: "",
-      // // dead letters from our notifications-queue should be routed to the recovery-queue
-      // deadLetterRoutingKey: "recovery",
-      // // set message time to live to 4s
-      // messageTtl: 4000,
+      // setup the dead letter exchange to point to the default exchange
+      deadLetterExchange: "",
+      // dead letters from our notifications-queue should be routed to the recovery-queue
+      deadLetterRoutingKey: "recovery",
+      // set message time to live to 5s
+      messageTtl: 5000,
     },
   },
 };

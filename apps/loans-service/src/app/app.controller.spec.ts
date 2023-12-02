@@ -37,7 +37,7 @@ describe('AppController', () => {
   describe('createLoan', () => {
     it('should create a Loan', () => {
       const appController = app.get<AppController>(AppController);
-      expect(appController.createLoan()).toEqual({ success: true });
+      expect(appController.createLoan({ type: 'email' })).toEqual({ success: true });
     });
   });
 });

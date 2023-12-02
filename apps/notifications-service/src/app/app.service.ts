@@ -1,33 +1,42 @@
+import { Inject, Injectable } from '@nestjs/common';
+import { ClientProxy, Ctx, Payload, RmqContext } from '@nestjs/microservices';
+import { CREATE_NOTIFICATION_SUCCESS_PATTERN, CreateNotificationPayload, queueOptions } from '@event-driven-arch/common';
+import { NotificationsService } from './notifications.service';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
-import { Inject, Injectable } from '@nestjs/common';
-import { Ctx, Payload, RmqContext } from '@nestjs/microservices';
 
 @Injectable()
 export class AppService {
-  private ENABLED = 'enabled'
-  constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache){}
 
-  async createNotification(@Payload() data: any, @Ctx() context: RmqContext): Promise<boolean> {
-    const enabled = await this.cacheManager.get(this.ENABLED);
+  constructor(
+    private readonly notificationsService: NotificationsService,
+    @Inject(queueOptions.notifications.name) private notificationsQueue: ClientProxy,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    ) {}
+
+  async createNotification(@Payload() payload: CreateNotificationPayload, @Ctx() context: RmqContext): Promise<boolean> {
     const channel = context.getChannelRef();
-    const originalMsg = context.getMessage();
-    if (!enabled) {
-      console.log('Notifications service is down');
-      channel.reject(originalMsg);
-      console.log('Message rejected');
-    } else {
-      channel.ack(originalMsg);
-      console.log('Notification created');
+    try {
+      this.notificationsService.sendNotification(payload);
+      channel.ack(context.getMessage());
+      this.notificationsQueue.emit(CREATE_NOTIFICATION_SUCCESS_PATTERN, payload);
+      return true;
+    } catch (e) {
+      const retryCount = await this.cacheManager.get<number>(payload.id) || 1;
+      if (retryCount === 3) {
+        channel.reject(context.getMessage(), false);
+        console.log(`Message ${payload.id} dropped`);
+      } else {
+        const message = context.getMessage()
+        console.log('message: ', message);
+        await this.cacheManager.set(payload.id, retryCount + 1);
+        channel.reject(message);
+        console.log(`Message ${payload.id} rejected and requeued`);
+      }
+      return false;
     }
-    
-    return true;
   }
 
-  async toggleMode(@Payload() enabled: boolean, @Ctx() context: RmqContext) : Promise<boolean> {
-    console.log(`enabled value: ${enabled}`)
-    await this.cacheManager.set(this.ENABLED, enabled, 0);
-    context.getChannelRef().ack(context.getMessage());
-    return true;
-  }
+
+
 }

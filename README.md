@@ -1,6 +1,6 @@
-# EventDrivenArch
+# Prototipo de Arquitectura de Microservicios con comunicación de colas
 
-Este es un prototipo que evalúa un walking skeleton de un arquitectura de microservicios conectada asincrónicamente a través de colas.
+Este es walking skeleton de un arquitectura de microservicios conectada asincrónicamente a través de colas.
 
 ## Ventajas de usar microservicios:
 
@@ -14,34 +14,32 @@ Este es un prototipo que evalúa un walking skeleton de un arquitectura de micro
 
 ## Desventajas de usar microservicios:
 
-**Complejidad en la Gestión:** El manejo de múltiples servicios puede aumentar la complejidad operativa, ya que se requiere coordinación entre ellos y un mayor esfuerzo para el monitoreo y la administración.
+**Complejidad en la Gestión:** El manejo de múltiples servicios aumenta el esfuerzo incial de implementación ya que implica desarrollar medios de comunicación y coordinación entre los mismos y un mayor esfuerzo para el monitoreo y la administración. Lo que aumenta la complejidad operativa.
 
-**Problemas de Consistencia y Coherencia:** La gestión de la coherencia de datos entre microservicios puede ser un desafío, lo que lleva a problemas de consistencia en sistemas distribuidos.
+**Problemas de Consistencia y Coherencia:** La gestión transacciones y la coherencia de datos entre microservicios puede ser un desafío, lo que lleva a problemas de consistencia en sistemas distribuidos.
 
-**Mayor Latencia:** Las comunicaciones entre microservicios pueden generar latencia adicional en comparación con aplicaciones monolíticas, especialmente en entornos distribuidos.
+**Mayor Latencia:** Las comunicaciones entre microservicios tienen latencia adicional en comparación con aplicaciones monolíticas.
 
 **Costos de Implementación y Mantenimiento:** La adopción de microservicios implica un cambio en la arquitectura y puede requerir inversiones significativas en infraestructura y recursos para el desarrollo y mantenimiento.
-
-La decisión de utilizar microservicios debe sopesarse considerando estas ventajas y desventajas, así como las necesidades específicas del proyecto y las capacidades del equipo de desarrollo.
 
 
 ## Ventajas de usar colas para comunicar los microservicios
 
-Desacoplamiento: Las colas permiten desacoplar los servicios, lo que significa que un servicio no necesita conocer directamente a qué otro servicio envía información. Esto facilita la escalabilidad y la evolución independiente de los servicios.
+**Desacoplamiento**: Las colas permiten desacoplar los servicios, lo que significa que un servicio no necesita conocer directamente al otro servicio al que envía información. Esto facilita la escalabilidad y la evolución independiente de los servicios.
 
-Tolerancia a Fallos: Las colas pueden ayudar a manejar situaciones en las que un servicio está temporalmente inactivo o experimenta problemas técnicos, ya que los mensajes pueden almacenarse en la cola hasta que el servicio destinatario esté listo para procesarlos.
+**Tolerancia a Fallos**: Las colas pueden ayudar a manejar situaciones en las que un servicio está temporalmente inactivo o experimenta problemas técnicos, ya que los mensajes pueden almacenarse en la cola hasta que el servicio destinatario esté listo para procesarlos.
 
-Mejora en el Rendimiento: Al permitir el procesamiento asíncrono, las colas pueden mejorar el rendimiento al liberar recursos y permitir que los servicios procesen mensajes en su propio tiempo y capacidad.
+**Mejora en el Rendimiento**: Al permitir el procesamiento asíncrono, las colas pueden mejorar el rendimiento al liberar recursos y permitir que los servicios procesen mensajes en su propio tiempo y capacidad.
 
 ## Desventajas  de usar colas para comunicar los microservicios
 
-Complejidad Adicional: Introducen complejidad en la arquitectura, ya que se necesita implementar y administrar la lógica para el envío, recepción y gestión de mensajes en las colas.
+**Complejidad Adicional**: Introducen complejidad en la arquitectura, ya que se necesita implementar y administrar la lógica para el envío, recepción y gestión de mensajes en las colas.
 
-Posible Pérdida de Mensajes: Existe el riesgo de pérdida de mensajes si no se implementan mecanismos adecuados para manejarlos en caso de fallos en la cola o en los servicios.
+**Posible Pérdida de Mensajes**: Existe el riesgo de pérdida de mensajes si no se implementan mecanismos adecuados para manejarlos en caso de fallos en la cola o en los servicios.
 
-Latencia Adicional: El uso de colas puede introducir latencia adicional en comparación con las comunicaciones directas entre servicios, especialmente en entornos donde se requiere una respuesta inmediata.
+**Latencia Adicional**: El uso de colas puede introducir latencia adicional en comparación con las comunicaciones directas entre servicios, especialmente en entornos donde se requiere una respuesta inmediata.
 
-Complejidad de la Gestión de Estado: Mantener el estado adecuado en un sistema basado en colas puede ser desafiante, ya que puede requerir técnicas especiales para asegurar la coherencia y consistencia de los datos.
+**Complejidad de la Gestión de Estado**: Mantener el estado adecuado en un sistema basado en colas puede ser desafiante, ya que puede requerir técnicas especiales para asegurar la coherencia y consistencia de los datos.
 
 En resumen, el uso de colas para la comunicación entre microservicios ofrece beneficios significativos en términos de desacoplamiento y tolerancia a fallos, pero también introduce complejidad adicional que debe ser gestionada y considerada en el diseño y la implementación del sistema.
 

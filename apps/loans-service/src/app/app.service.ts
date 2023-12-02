@@ -1,34 +1,35 @@
-import { queueOptions } from '@event-driven-arch/common';
+import { CreateNotificationPayload, queueOptions } from '@event-driven-arch/common';
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
+import { v4 as uuid } from 'uuid'
 
 @Injectable()
 export class AppService {
-
   constructor(@Inject(queueOptions.notifications.name) private readonly notificationsClient: ClientProxy) {
     // this.notificationsClient.connect();
   }
 
-  async createLoan() {
-    console.log('Createing loan....');
-    try {
-      const notification = { message: 'Loan created' };
-      const resp = this.notificationsClient.send('create_notification', JSON.stringify(notification))
-      console.log('Loan created');
-      const value = await firstValueFrom(resp);
-      console.log(`${JSON.stringify(value)}`);
-    } catch(err) {
-      console.log(`Error when trying to send 'create_notification', ${JSON.stringify(err)}`);
-      throw err;
+  async createLoansBatch(quantity: number) {
+    for (let i = 0; i < quantity; i++) {
+      const type = i % 3 === 0 ? 'sms' : 'email';
+      await this.createLoan(type);
     }
   }
 
-  async toggleNotifications(data) {
-    const resp = this.notificationsClient.send('toggle_enabled', JSON.stringify(data));
-    console.log(`Toggle notifications ${data.enabled ? "on" : "off"}`);
-    const value = await firstValueFrom(resp);
-    console.log(`${JSON.stringify(value)}`);
+  async createLoan(type: string) {
+    const id = uuid()
+    console.log(`Creating loan ${id}`);
+    try {
+      const message = `Loan ${id} created`;
+      const notification: CreateNotificationPayload = { id, message, type };
+      const resp = this.notificationsClient.send('create_notification', notification);
+      console.log(message);
+      return firstValueFrom(resp);
+    } catch(err) {
+      console.log(`Error creating loan ${id} - ${JSON.stringify(err)}`);
+      throw err;
+    }
   }
 
 }
