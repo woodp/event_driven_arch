@@ -3,9 +3,9 @@ import { Controller } from '@nestjs/common';
 import { AppService } from './app.service';
 import { Ctx, EventPattern, Payload, RmqContext } from '@nestjs/microservices';
 import { 
-  CREATE_NOTIFICATION_FAILURE_PATTERN, 
+  NOTIFICATION_FAILURE_PATTERN, 
   CREATE_NOTIFICATION_PATTERN, 
-  CREATE_NOTIFICATION_SUCCESS_PATTERN, 
+  NOTIFICATION_SUCCESS_PATTERN, 
   CreateNotificationPayload,
 } from '@event-driven-arch/common';
 
@@ -22,7 +22,7 @@ export class AppController {
     return this.appService.createNotification(payload, context);
   }
 
-  @EventPattern(CREATE_NOTIFICATION_SUCCESS_PATTERN)
+  @EventPattern(NOTIFICATION_SUCCESS_PATTERN)
   notificationSuccessEvent(
     @Payload() payload: CreateNotificationPayload,
     @Ctx() context: RmqContext,
@@ -31,7 +31,7 @@ export class AppController {
     context.getChannelRef().ack(context.getMessage());
   }
 
-  @EventPattern(CREATE_NOTIFICATION_FAILURE_PATTERN)
+  @EventPattern(NOTIFICATION_FAILURE_PATTERN)
   notificationFailureEvent(
     @Payload() payload: CreateNotificationPayload,
     @Ctx() context: RmqContext,

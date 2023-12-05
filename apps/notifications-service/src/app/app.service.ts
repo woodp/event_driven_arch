@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy, Ctx, Payload, RmqContext } from '@nestjs/microservices';
-import { CREATE_NOTIFICATION_SUCCESS_PATTERN, CreateNotificationPayload, queueOptions } from '@event-driven-arch/common';
+import { NOTIFICATION_FAILURE_PATTERN, NOTIFICATION_SUCCESS_PATTERN, CreateNotificationPayload, queueOptions } from '@event-driven-arch/common';
 import { NotificationsService } from './notifications.service';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
@@ -19,12 +19,13 @@ export class AppService {
     try {
       this.notificationsService.sendNotification(payload);
       channel.ack(context.getMessage());
-      this.notificationsQueue.emit(CREATE_NOTIFICATION_SUCCESS_PATTERN, payload);
+      this.notificationsQueue.emit(NOTIFICATION_SUCCESS_PATTERN, payload);
       return true;
     } catch (e) {
       const retryCount = await this.cacheManager.get<number>(payload.id) || 1;
       console.log(`retry count for message ${payload.id} is: ${retryCount}`);
       if (retryCount === 3) {
+        this.notificationsQueue.emit(NOTIFICATION_FAILURE_PATTERN, payload);
         channel.reject(context.getMessage(), false);
         console.log(`Message ${payload.id} dropped`);
       } else {

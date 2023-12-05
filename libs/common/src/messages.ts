@@ -6,6 +6,6 @@ export interface CreateNotificationPayload {
   type: string;
 }
 
-export const CREATE_NOTIFICATION_SUCCESS_PATTERN = "create_notification_success";
+export const NOTIFICATION_SUCCESS_PATTERN = "create_notification_success";
 
-export const CREATE_NOTIFICATION_FAILURE_PATTERN = "create_notification_failure";
+export const NOTIFICATION_FAILURE_PATTERN = "create_notification_failure";

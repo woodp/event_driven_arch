@@ -2,6 +2,47 @@
 
 Este es walking skeleton de un arquitectura de microservicios conectada asincrónicamente a través de colas.
 
+Está compuesto por los siguientes componentes:
+
+  - Loans service:
+    Este servicio es el "producer", luego de crear un loan genera un evento para notificar esto.
+
+  - Notifications service:
+    Este servicio es el "consumer", está encargado de las notificaciones y es quien levanta el evento de la creación de un loan.
+    Tiene un mecanismo de reintento (retry pattern) que intenta 3 veces o hasta que el mensaje expira (TTL) lo que ocurra primero.
+    Los mensajes que no pueden ser procesados luego de los reintentos van a la cola "dead letter".
+
+  - Recovery service:
+    Este servicio no está implementado completamente pero es quien levanta la cola *dead letter", la idea de este sería procesar los mensajes que no pudieron ser atendidos, ya sea reprocesándolos o con alguna revisión manual dependiendo del caso.
+
+  - Librería common
+    Contiene los eventos de colas (patterns), la interface del payload y las opciones de configuración de las 2 colas utilizadas que son compartidas entre los distintos microservicios.
+
+  - Colas:
+      - notifications: es la cola que maneja los mensajes de notificación
+      - recovery: es la cola de mensajes que no pudieron ser notificados luego de la estrategia de reintento y/o el tiempo de vida especificado (dead-letter queue)
+
+  - Eventos:
+    - CREATE_NOTIFICATION_PATTERN: es el evento que consume el notifications service para generar las notificaciones
+    - NOTIFICATION_SUCCESS_PATTERN: evento para informar que la notificación fue realizada exitosamente
+    - NOTIFICATION_FAILURE_PATTERN: evento para informar que la notificación y sus reintentos fallaron (message dropped)
+
+**Nota:** Los nombres de los servicios son sólo a modo de ejemplo ya que la presenta solución es un walking skeleton y por ende no posee lógica de dominio
+
+## Decisiones de arquitectura
+En la implementación de este prototipo se decició usar RabbitMQ como gestor de colas por sobre Bull, esta decisión está documentada en el ADR incluído en el repositorio bajo el nombre **Gestion-Colas-02-12-2023.md**. Los attributos de calidad considerados para esta decisión fueron los siguientes:
+  - Interoperabilidad
+  - Escalabilidad y rendimiento
+  - Flexibilidad / Extensibilidad
+  - Robustez / Soporte
+
+## Escenarios de prueba
+
+Con el propósito de probar la arquitectura se crearon dos endpoints en el loans service:
+  - /POST /api que crea un Loan y se le pasa un tipo (type) en el body para poder probar los distintos escenarios si el tipo es "sms" el servicio de notificaciones fallará, con cualquier otro tipo será exitoso
+  - POST /api/batch crea una cantidad de Loans n (según lo indicado en el body), 1 de cada 5 de los loans creados será de tipo "sms"
+
+
 ## Ventajas de usar microservicios:
 
 **Escalabilidad y Flexibilidad:** Los microservicios permiten escalar componentes específicos de manera independiente, lo que facilita la gestión de la carga y la adaptación a cambios en la demanda.
