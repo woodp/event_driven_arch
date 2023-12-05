@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
 
 import { AppService } from './app.service';
 
@@ -12,7 +12,7 @@ export class AppController {
     return { success: true };
   }
 
-  @Post()
+  @Post('batch')
   async createLoansBatch(@Body() body) {
     await this.appService.createLoansBatch(body.quantity);
     return { success: true };

@@ -23,14 +23,13 @@ export class AppService {
       return true;
     } catch (e) {
       const retryCount = await this.cacheManager.get<number>(payload.id) || 1;
+      console.log(`retry count for message ${payload.id} is: ${retryCount}`);
       if (retryCount === 3) {
         channel.reject(context.getMessage(), false);
         console.log(`Message ${payload.id} dropped`);
       } else {
-        const message = context.getMessage()
-        console.log('message: ', message);
         await this.cacheManager.set(payload.id, retryCount + 1);
-        channel.reject(message);
+        channel.reject(context.getMessage());
         console.log(`Message ${payload.id} rejected and requeued`);
       }
       return false;

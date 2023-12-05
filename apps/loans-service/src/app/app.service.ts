@@ -6,13 +6,11 @@ import { v4 as uuid } from 'uuid'
 
 @Injectable()
 export class AppService {
-  constructor(@Inject(queueOptions.notifications.name) private readonly notificationsClient: ClientProxy) {
-    // this.notificationsClient.connect();
-  }
+  constructor(@Inject(queueOptions.notifications.name) private readonly notificationsClient: ClientProxy) {}
 
   async createLoansBatch(quantity: number) {
-    for (let i = 0; i < quantity; i++) {
-      const type = i % 3 === 0 ? 'sms' : 'email';
+    for (let i = 1; i < quantity + 1; i++) {
+      const type = i % 5 === 0 ? 'sms' : 'email';
       await this.createLoan(type);
     }
   }
