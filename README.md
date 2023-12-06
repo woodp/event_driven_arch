@@ -2,7 +2,7 @@
 
 Este es walking skeleton de un arquitectura de microservicios conectada asincrónicamente a través de colas.
 
-Está compuesto por los siguientes componentes:
+Está formado por los siguientes componentes:
 
   - Loans service:
     Este servicio es el "producer", luego de crear un loan genera un evento para notificar esto.
@@ -26,6 +26,9 @@ Está compuesto por los siguientes componentes:
     - CREATE_NOTIFICATION_PATTERN: es el evento que consume el notifications service para generar las notificaciones
     - NOTIFICATION_SUCCESS_PATTERN: evento para informar que la notificación fue realizada exitosamente
     - NOTIFICATION_FAILURE_PATTERN: evento para informar que la notificación y sus reintentos fallaron (message dropped)
+
+
+![Diagrama de componentes](components.png)
 
 **Nota:** Los nombres de los servicios son sólo a modo de ejemplo ya que la presenta solución es un walking skeleton y por ende no posee lógica de dominio
 
@@ -112,6 +115,8 @@ Setear los valores de la configuración en los archivos .env en el root de cada 
 - `path-to-app\event_driven_arch\apps\loans-service\.env`
 - `path-to-app\event_driven_arch\apps\notifications-service\.env`
 
+- `path-to-app\event_driven_arch\apps\recovery-service\.env`
+
 Los valores a setear se puede ver en el archivo `env.template`
 
 ### Instalar dependencias
@@ -124,63 +129,35 @@ Los valores a setear se puede ver en el archivo `env.template`
 
 - Para correr el servicio de loans ejecutar en una consola `npx nx serve notifications-service`
 
+- Para correr el servicio de recovery (que levanta la dead-letter queue) ejecutar en una consola `npx nx serve recovery-service`
+
 Nota: Para instalar Nx global: `npm install --global nx@latest` (para no tener que usar npx en cada comando)
 
-### Generar un evento de creación de un loan
+### Pruebas desde la REST API
 
-`curl --location --request POST 'http://localhost:3000/api/'`
-o usar POSTMAN
-
-### Correr los tests de integración
-
-`npx nx run loans-service:test e2e`
-
-
------------------------------------------
------------------------------------------
-
-
-
-## Running tasks
-
-To execute tasks with Nx use the following syntax:
-
+Generar un loan con notificación exitosa:
 ```
-nx <target> <project> <...options>
+curl --location 'http://localhost:3000/api/' \
+--header 'Content-Type: application/json' \
+--data '{
+    "type": "email"
+}'
 ```
 
-You can also run multiple targets:
-
+Generar un loan con notificación fallida:
 ```
-nx run-many -t <target1> <target2>
-```
-
-..or add `-p` to filter specific projects
-
-```
-nx run-many -t <target1> <target2> -p <proj1> <proj2>
+curl --location 'http://localhost:3000/api/' \
+--header 'Content-Type: application/json' \
+--data '{
+    "type": "sms"
+}'
 ```
 
-Targets can be defined in the `package.json` or `projects.json`. Learn more [in the docs](https://nx.dev/core-features/run-tasks).
-
-## Want better Editor Integration?
-
-Have a look at the [Nx Console extensions](https://nx.dev/nx-console). It provides autocomplete support, a UI for exploring and running tasks & generators, and more! Available for VSCode, IntelliJ and comes with a LSP for Vim users.
-
-## Ready to deploy?
-
-Just run `nx build demoapp` to build the application. The build artifacts will be stored in the `dist/` directory, ready to be deployed.
-
-## Set up CI!
-
-Nx comes with local caching already built-in (check your `nx.json`). On CI you might want to go a step further.
-
-- [Set up remote caching](https://nx.dev/core-features/share-your-cache)
-- [Set up task distribution across multiple machines](https://nx.dev/core-features/distribute-task-execution)
-- [Learn more how to setup CI](https://nx.dev/recipes/ci)
-
-## Connect with us!
-
-- [Join the community](https://nx.dev/community)
-- [Subscribe to the Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
-- [Follow us on Twitter](https://twitter.com/nxdevtools)
+Generar un batch de n loans, 1 de cada 5 falla
+```
+curl --location 'http://localhost:3000/api/batch' \
+--header 'Content-Type: application/json' \
+--data '{
+    "quantity": 30
+}'
+```
