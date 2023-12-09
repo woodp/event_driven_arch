@@ -1,8 +1,8 @@
 # Prototipo de Arquitectura de Microservicios con comunicación de colas
 
-Este es walking skeleton de un arquitectura de microservicios conectada asincrónicamente a través de colas.
+Este es walking skeleton de un arquitectura de microservicios conectada asincrónicamente a través de colas. El objetivo es realizar un prototipo de este tipo de arquitecturas como fase de exploración, prueba y con el objetivo de descubrir sus ventajas y desventajas y cualquier riesgo asociado a la misma.
 
-Está formado por los siguientes componentes:
+La solución está formada por los siguientes componentes:
 
 - Loans service:
     Este servicio es el "producer", luego de crear un loan genera un evento para notificar esto.
@@ -86,6 +86,24 @@ Con el propósito de probar la arquitectura se crearon dos endpoints en el loans
 **Complejidad de la Gestión de Estado**: Mantener el estado adecuado en un sistema basado en colas puede ser desafiante, ya que puede requerir técnicas especiales para asegurar la coherencia y consistencia de los datos.
 
 En resumen, el uso de colas para la comunicación entre microservicios ofrece beneficios significativos en términos de desacoplamiento y tolerancia a fallos, pero también introduce complejidad adicional que debe ser gestionada y considerada en el diseño y la implementación del sistema.
+
+## Conclusiones
+
+La adopción de una arquitectura de microservicios con el uso de colas permite escalar componentes específicos de manera independiente, lo que optimiza los recursos y la capacidad de respuesta. La separación en servicios más pequeños reduce el impacto de fallos, ya que los problemas en un microservicio no afectan necesariamente a todo el sistema.
+
+Los microservicios pueden ser gestionados por distintos equipos pequeños. Una persona que ingresa al proyecto tiene un tiempo menor de aprendizaje ya que sólo necesita comprender un microservicio y no toda la solución como pasaría con un monolito.
+
+La utilización de microservicios y RabbitMQ que implementa el protocolo AMPQ permite a futuro la elección de tecnologías diferentes para cada microservicio.
+
+El desarrollo de este prototipo permite ver parte de los desafíos que se pueden enfentar al utilizar esta arquitectura. En particular se explora una estrategia simple de reintento (retry pattern) que a futuro podría ser mejorada utilizando una estrategia back offf exponencial por ejemplo. También se utiliza una una tiempo de expiración (TTL: time to live) y un máximo de reintentos junto con una cola para persistir los mensajes que se desisten (dead-letter queue), esto permite cortar el ciclo de reintentos evitando sobrecargar el sistema, esto también podría ser mejorado implementando un patrón de circuit breaker más sofisticado y también una implementación de recuperación automática, manual o mixta según se necesite para manejar los mensajes desistidos.
+
+Todo esto implica que implementar este tipo de solución requiere un **mayor esfuerzo inicial** (ramp up). Entre otras cosas en cuanto al manejo y la configuración de colas, la estrategia de manejo, reintento y desistimiento de mensajes, etc. Pero este costo inicial más grande redundará en una mayor confiabilidad y resiliencia de la solución en su conjunto y más adelante en el ciclo de vida del producto permitirán actualizaciones y despliegues más rápidos y frecuentes, facilitando la entrega continua de valor.
+
+Algunos de los desafíos que no fueron explorados en este prototipo pero se pueden encontrar son el monitoreo y la depuración de las interacciones entre los múltiples microservicios, lo que aumenta la complejidad operativa. Así como mantener la consistencia entre los mismos, especialmente en transacciones distribuidas que requieren atomicidad.
+
+Algunos de los riesgos detectados es que la comunicación entre microservicios a través de colas puede generar un exceso de mensajes y una sobrecarga en la red, así como la pérdida y duplicación de mensajes.
+
+En conclusión, la arquitectura de microservicios con el uso de colas ofrece beneficios significativos en términos de escalabilidad, flexibilidad y resiliencia, pero conlleva desafíos considerables en términos de complejidad operativa, latencia, manejo de transacciones y mantenimiento de la consistencia. Una implementación exitosa requiere un diseño cuidadoso y una gestión efectiva de los riesgos asociados.
 
 ## Instrucciones para correr el prototipo
 
