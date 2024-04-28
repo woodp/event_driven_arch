@@ -29,7 +29,7 @@ La solución está formada por los siguientes componentes:
 
 ![Diagrama de componentes](components.png)
 
-**Nota:** Los nombres de los servicios son sólo a modo de ejemplo ya que la presenta solución es un walking skeleton y por ende no posee lógica de dominio
+**Nota:** Los nombres de los servicios son sólo a modo de ejemplo ya que la presente solución es un walking skeleton y por ende no posee lógica de dominio
 
 ## Decisiones de arquitectura
 
@@ -55,13 +55,13 @@ Con el propósito de probar la arquitectura se crearon dos endpoints en el loans
 
 **Tecnología Diversa:** Facilitan la adopción de diferentes tecnologías y lenguajes de programación para cada servicio, permitiendo seleccionar la mejor herramienta para cada tarea.
 
-**Facilitan la Colaboración:** Al estar divididos en servicios más pequeños, varios equipos pueden trabajar en paralelo en diferentes microservicios, mejorando la agilidad y la colaboración.
+**Facilitan el trabajo independiente de los equipos:** Al estar divididos en servicios más pequeños, varios equipos pueden trabajar en paralelo en diferentes microservicios, mejorando la capacidad de desarrollar a escala, en forma independiente.
 
 ## Desventajas de usar microservicios
 
 **Complejidad en la Gestión:** El manejo de múltiples servicios aumenta el esfuerzo incial de implementación ya que implica desarrollar medios de comunicación y coordinación entre los mismos y un mayor esfuerzo para el monitoreo y la administración. Lo que aumenta la complejidad operativa.
 
-**Problemas de Consistencia y Coherencia:** La gestión transacciones y la coherencia de datos entre microservicios puede ser un desafío, lo que lleva a problemas de consistencia en sistemas distribuidos.
+**Problemas de Consistencia y Coherencia:** La gestión de transacciones y la coherencia de datos entre microservicios puede ser un desafío, lo que lleva a problemas de consistencia en sistemas distribuidos.
 
 **Mayor Latencia:** Las comunicaciones entre microservicios tienen latencia adicional en comparación con aplicaciones monolíticas.
 
@@ -136,7 +136,7 @@ Setear los valores de la configuración en los archivos .env en el root de cada 
 
 - `path-to-app\event_driven_arch\apps\recovery-service\.env`
 
-Los valores a setear se puede ver en el archivo `env.template`
+Los valores por defecto están en el archivo `env.template` en cada uno de esos directorios, en el caso de que se hayan utilizado los valores tal cual están en este texto, con renombrar cada uno de esos archivos a `.env` será suficiente.
 
 ### Instalar dependencias
 
@@ -183,3 +183,5 @@ curl --location 'http://localhost:3000/api/batch' \
     "quantity": 30
 }'
 ```
+
+Se puede observar en las consolas de los servicios la actividad generada en cada uno de ellos.
