@@ -1,160 +1,157 @@
-# Prototipo de Arquitectura de Microservicios con comunicación de colas
+# Microservices Architecture Prototype with Queue Communication
 
-Este es walking skeleton de un arquitectura de microservicios conectada asincrónicamente a través de colas. El objetivo es realizar un prototipo de este tipo de arquitecturas como fase de exploración, prueba y con el objetivo de descubrir sus ventajas y desventajas y cualquier riesgo asociado a la misma.
+This is a walking skeleton of a microservices architecture asynchronously connected via queues. The objective is to prototype such architectures as an exploration phase, testing, and with the aim of discovering their advantages, disadvantages, and any associated risks.
 
-La solución está formada por los siguientes componentes:
+The solution consists of the following components:
 
 - Loans service:
-    Este servicio es el "producer", luego de crear un loan genera un evento para notificar esto.
+    This service is the "producer"; after creating a loan, it generates an event to notify this.
 
 - Notifications service:
-    Este servicio es el "consumer", está encargado de las notificaciones y es quien levanta el evento de la creación de un loan.
-    Tiene un mecanismo de reintento (retry pattern) que intenta 3 veces o hasta que el mensaje expira (TTL) lo que ocurra primero.
-    Los mensajes que no pueden ser procesados luego de los reintentos van a la cola "dead letter".
+    This service is the "consumer" responsible for notifications and raises the event of creating a loan.
+    It has a retry mechanism that attempts 3 times or until the message expires (TTL), whichever comes first.
+    Messages that cannot be processed after retries go to the "dead letter" queue.
 
 - Recovery service:
-    Este servicio no está implementado completamente pero es quien levanta la cola *dead letter", la idea de este sería procesar los mensajes que no pudieron ser atendidos, ya sea reprocesándolos o con alguna revisión manual dependiendo del caso.
+    This service is not fully implemented but it is responsible for raising the "dead letter" queue. The idea of this would be to process messages that could not be handled, either by reprocessing them or with some manual review depending on the case.
 
-- Librería common
-    Contiene los eventos de colas (patterns), la interface del payload y las opciones de configuración de las 2 colas utilizadas que son compartidas entre los distintos microservicios.
+- Common library:
+    Contains queue events (patterns), the payload interface, and configuration options for the 2 queues used, which are shared among the different microservices.
 
-- Colas:
-  - notifications: es la cola que maneja los mensajes de notificación
-  - recovery: es la cola de mensajes que no pudieron ser notificados luego de la estrategia de reintento y/o el tiempo de vida especificado (dead-letter queue)
+- Queues:
+  - notifications: is the queue that handles notification messages
+  - recovery: is the queue for messages that could not be notified after the retry strategy and/or the specified time to live (dead-letter queue)
 
-- Eventos:
-  - CREATE_NOTIFICATION_PATTERN: es el evento que consume el notifications service para generar las notificaciones
-  - NOTIFICATION_SUCCESS_PATTERN: evento para informar que la notificación fue realizada exitosamente
-  - NOTIFICATION_FAILURE_PATTERN: evento para informar que la notificación y sus reintentos fallaron (message dropped)
+- Events:
+  - CREATE_NOTIFICATION_PATTERN: is the event consumed by the notifications service to generate notifications
+  - NOTIFICATION_SUCCESS_PATTERN: event to inform that the notification was successfully made
+  - NOTIFICATION_FAILURE_PATTERN: event to inform that the notification and its retries failed (message dropped)
 
-![Diagrama de componentes](components.png)
+![Components Diagram](components.png)
 
-**Nota:** Los nombres de los servicios son sólo a modo de ejemplo ya que la presente solución es un walking skeleton y por ende no posee lógica de dominio
+**Note:** The service names are for example purposes only as this solution is a walking skeleton and therefore does not possess domain logic.
 
-## Decisiones de arquitectura
+## Architecture Decisions
 
-En la implementación de este prototipo se decició usar RabbitMQ como gestor de colas por sobre Bull, esta decisión está documentada en el ADR incluído en el repositorio bajo el nombre **Gestion-Colas-02-12-2023.md**. Los attributos de calidad considerados para esta decisión fueron los siguientes:
+In implementing this prototype, it was decided to use RabbitMQ as the queue manager over Bull. This decision is documented in the included ADR under the name **Queue-Management-02-12-2023.md**. The quality attributes considered for this decision were as follows:
 
-- Interoperabilidad
-- Escalabilidad y rendimiento
-- Flexibilidad / Extensibilidad
-- Robustez / Soporte
+- Interoperability
+- Scalability and Performance
+- Flexibility / Extensibility
+- Robustness / Support
 
-## Escenarios de prueba
+## Test Scenarios
 
-Con el propósito de probar la arquitectura se crearon dos endpoints en el loans service:
+To test the architecture, two endpoints were created in the loans service:
 
-- /POST /api que crea un Loan y se le pasa un tipo (type) en el body para poder probar los distintos escenarios si el tipo es "sms" el servicio de notificaciones fallará, con cualquier otro tipo será exitoso
-- POST /api/batch crea una cantidad de Loans n (según lo indicado en el body), 1 de cada 5 de los loans creados será de tipo "sms"
+- /POST /api which creates a Loan and passes a type in the body to test different scenarios. If the type is "sms", the notifications service will fail; with any other type, it will be successful.
+- POST /api/batch creates a number of Loans n (as indicated in the body), 1 out of every 5 loans created will be of type "sms".
 
-## Ventajas de usar microservicios
+## Advantages of Using Microservices
 
-**Escalabilidad y Flexibilidad:** Los microservicios permiten escalar componentes específicos de manera independiente, lo que facilita la gestión de la carga y la adaptación a cambios en la demanda.
+**Scalability and Flexibility:** Microservices allow scaling specific components independently, facilitating load management and adaptation to changes in demand.
 
-**Despliegue Independiente:** Cada microservicio puede ser desplegado de forma independiente, lo que agiliza las actualizaciones y reduce el impacto de errores en otros servicios.
+**Independent Deployment:** Each microservice can be deployed independently, speeding up updates and reducing the impact of errors on other services.
 
-**Tecnología Diversa:** Facilitan la adopción de diferentes tecnologías y lenguajes de programación para cada servicio, permitiendo seleccionar la mejor herramienta para cada tarea.
+**Diverse Technology:** They facilitate the adoption of different technologies and programming languages for each service, allowing the selection of the best tool for each task.
 
-**Facilitan el trabajo independiente de los equipos:** Al estar divididos en servicios más pequeños, varios equipos pueden trabajar en paralelo en diferentes microservicios, mejorando la capacidad de desarrollar a escala, en forma independiente.
+**Facilitate Independent Team Work:** By being divided into smaller services, multiple teams can work in parallel on different microservices, improving the ability to develop at scale, independently.
 
-## Desventajas de usar microservicios
+## Disadvantages of Using Microservices
 
-**Complejidad en la Gestión:** El manejo de múltiples servicios aumenta el esfuerzo incial de implementación ya que implica desarrollar medios de comunicación y coordinación entre los mismos y un mayor esfuerzo para el monitoreo y la administración. Lo que aumenta la complejidad operativa.
+**Management Complexity:** Managing multiple services increases the initial implementation effort as it involves developing means of communication and coordination between them and greater effort for monitoring and administration, increasing operational complexity.
 
-**Problemas de Consistencia y Coherencia:** La gestión de transacciones y la coherencia de datos entre microservicios puede ser un desafío, lo que lleva a problemas de consistencia en sistemas distribuidos.
+**Consistency and Coherence Issues:** Managing transactions and data consistency between microservices can be challenging, leading to consistency problems in distributed systems.
 
-**Mayor Latencia:** Las comunicaciones entre microservicios tienen latencia adicional en comparación con aplicaciones monolíticas.
+**Increased Latency:** Communications between microservices have additional latency compared to monolithic applications.
 
-**Costos de Implementación y Mantenimiento:** La adopción de microservicios implica un cambio en la arquitectura y puede requerir inversiones significativas en infraestructura y recursos para el desarrollo y mantenimiento.
+**Implementation and Maintenance Costs:** Adopting microservices implies a change in architecture and may require significant investments in infrastructure and resources for development and maintenance.
 
-## Ventajas de usar colas para comunicar los microservicios
+## Advantages of Using Queues for Microservices Communication
 
-**Desacoplamiento**: Las colas permiten desacoplar los servicios, lo que significa que un servicio no necesita conocer directamente al otro servicio al que envía información. Esto facilita la escalabilidad y la evolución independiente de los servicios.
+**Decoupling:** Queues allow services to be decoupled, meaning a service does not need to directly know the other service to which it sends information. This facilitates scalability and independent evolution of services.
 
-**Tolerancia a Fallos**: Las colas pueden ayudar a manejar situaciones en las que un servicio está temporalmente inactivo o experimenta problemas técnicos, ya que los mensajes pueden almacenarse en la cola hasta que el servicio destinatario esté listo para procesarlos.
+**Fault Tolerance:** Queues can help handle situations where a service is temporarily inactive or experiencing technical issues, as messages can be stored in the queue until the destination service is ready to process them.
 
-**Mejora en el Rendimiento**: Al permitir el procesamiento asíncrono, las colas pueden mejorar el rendimiento al liberar recursos y permitir que los servicios procesen mensajes en su propio tiempo y capacidad.
+**Performance Improvement:** By allowing asynchronous processing, queues can improve performance by freeing up resources and allowing services to process messages at their own time and capacity.
 
-## Desventajas  de usar colas para comunicar los microservicios
+## Disadvantages of Using Queues for Microservices Communication
 
-**Complejidad Adicional**: Introducen complejidad en la arquitectura, ya que se necesita implementar y administrar la lógica para el envío, recepción y gestión de mensajes en las colas.
+**Additional Complexity:** They introduce complexity in the architecture, as logic for sending, receiving, and managing messages in queues needs to be implemented and managed.
 
-**Posible Pérdida de Mensajes**: Existe el riesgo de pérdida de mensajes si no se implementan mecanismos adecuados para manejarlos en caso de fallos en la cola o en los servicios.
+**Potential Message Loss:** There is a risk of message loss if adequate mechanisms are not implemented to handle them in case of failures in the queue or services.
 
-**Latencia Adicional**: El uso de colas puede introducir latencia adicional en comparación con las comunicaciones directas entre servicios, especialmente en entornos donde se requiere una respuesta inmediata.
+**Additional Latency:** The use of queues can introduce additional latency compared to direct communications between services, especially in environments where an immediate response is required.
 
-**Complejidad de la Gestión de Estado**: Mantener el estado adecuado en un sistema basado en colas puede ser desafiante, ya que puede requerir técnicas especiales para asegurar la coherencia y consistencia de los datos.
+**State Management Complexity:** Maintaining the proper state in a queue-based system can be challenging, as it may require special techniques to ensure data coherence and consistency.
 
-En resumen, el uso de colas para la comunicación entre microservicios ofrece beneficios significativos en términos de desacoplamiento y tolerancia a fallos, pero también introduce complejidad adicional que debe ser gestionada y considerada en el diseño y la implementación del sistema.
+In summary, using queues for communication between microservices offers significant benefits in terms of decoupling and fault tolerance but also introduces additional complexity that must be managed and considered in the design and implementation of the system.
 
-## Conclusiones
+## Conclusions
 
-La adopción de una arquitectura de microservicios con el uso de colas permite escalar componentes específicos de manera independiente, lo que optimiza los recursos y la capacidad de respuesta. La separación en servicios más pequeños reduce el impacto de fallos, ya que los problemas en un microservicio no afectan necesariamente a todo el sistema.
+The adoption of a microservices architecture using queues allows scaling specific components independently, optimizing resources and responsiveness. The separation into smaller services reduces the impact of failures since issues in one microservice do not necessarily affect the entire system.
 
-Los microservicios pueden ser gestionados por distintos equipos pequeños. Una persona que ingresa al proyecto tiene un tiempo menor de aprendizaje ya que sólo necesita comprender un microservicio y no toda la solución como pasaría con un monolito.
+Microservices can be managed by different small teams. A person joining the project has a shorter learning curve since they only need to understand one microservice and not the entire solution as would be the case with a monolith.
 
-La utilización de microservicios y RabbitMQ que implementa el protocolo AMPQ permite a futuro la elección de tecnologías diferentes para cada microservicio.
+The use of microservices and RabbitMQ, which implements the AMPQ protocol, allows for the future choice of different technologies for each microservice.
 
-El desarrollo de este prototipo permite ver parte de los desafíos que se pueden enfentar al utilizar esta arquitectura. En particular se explora una estrategia simple de reintento (retry pattern) que a futuro podría ser mejorada utilizando una estrategia back offf exponencial por ejemplo. También se utiliza una una tiempo de expiración (TTL: time to live) y un máximo de reintentos junto con una cola para persistir los mensajes que se desisten (dead-letter queue), esto permite cortar el ciclo de reintentos evitando sobrecargar el sistema, esto también podría ser mejorado implementando un patrón de circuit breaker más sofisticado y también una implementación de recuperación automática, manual o mixta según se necesite para manejar los mensajes desistidos.
+The development of this prototype allows us to see some of the challenges that can be encountered when using this architecture. In particular, it explores a simple retry pattern that could be improved in the future by using an exponential backoff strategy, for example. It also uses an expiration time (TTL: time to live) and a maximum number of retries along with a queue to persist dropped messages (dead-letter queue), which allows cutting the retry cycle to avoid overloading the system. This could also be improved by implementing a more sophisticated circuit breaker pattern and also an automatic, manual, or mixed recovery implementation as needed to handle dropped messages.
 
-Todo esto implica que implementar este tipo de solución requiere un **mayor esfuerzo inicial** (ramp up). Entre otras cosas en cuanto al manejo y la configuración de colas, la estrategia de manejo, reintento y desistimiento de mensajes, etc. Pero este costo inicial más grande redundará en una mayor confiabilidad y resiliencia de la solución en su conjunto y más adelante en el ciclo de vida del producto permitirán actualizaciones y despliegues más rápidos y frecuentes, facilitando la entrega continua de valor.
+All of this implies that implementing this type of solution requires a **greater initial effort** (ramp-up). Among other things, in terms of queue management and configuration, message handling, retry and drop strategies, etc. But this larger initial cost will result in greater reliability and resilience of the solution as a whole and later in the product lifecycle will allow faster and more frequent updates and deployments, facilitating continuous delivery of value.
 
-Algunos de los desafíos que no fueron explorados en este prototipo pero se pueden encontrar son el monitoreo y la depuración de las interacciones entre los múltiples microservicios, lo que aumenta la complejidad operativa. Así como mantener la consistencia entre los mismos, especialmente en transacciones distribuidas que requieren atomicidad.
+Some of the challenges that were not explored in this prototype but may be encountered include monitoring and debugging interactions between multiple microservices, increasing operational complexity. As well as maintaining consistency among them, especially in distributed transactions that require atomicity.
 
-Algunos de los riesgos detectados es que la comunicación entre microservicios a través de colas puede generar un exceso de mensajes y una sobrecarga en la red, así como la pérdida y duplicación de mensajes.
+Some of the risks identified are that communication between microservices via queues can generate an excess of messages and network overhead, as well as message loss and duplication.
 
-En conclusión, la arquitectura de microservicios con el uso de colas ofrece beneficios significativos en términos de escalabilidad, flexibilidad y resiliencia, pero conlleva desafíos considerables en términos de complejidad operativa, latencia, manejo de transacciones y mantenimiento de la consistencia. Una implementación exitosa requiere un diseño cuidadoso y una gestión efectiva de los riesgos asociados.
+In conclusion, a microservices architecture using queues offers significant benefits in terms of scalability, flexibility, and resilience but entails considerable challenges in terms of operational complexity, latency, transaction management, and maintaining consistency. Successful implementation requires careful design and effective management of associated risks.
 
-## Instrucciones para correr el prototipo
+## Instructions to Run the Prototype
 
-### Prerequisitos
+### Prerequisites
 
-- Node v 20 (y npm)
-  - Se puede bajar de <https://nodejs.org/en/download>
-  - O usar un package manager como nvm: <https://nodejs.org/en/download/package-manager>
-
+- Node v20 (and npm)
+  - It can be downloaded from https://nodejs.org/en/download
+  - Or use a package manager like nvm: https://nodejs.org/en/download/package-manager
 - Docker
 
 ### RabbitMQ
 
-Bajar un instancia dockerizada de RabitMQ
+Download a Dockerized instance of RabbitMQ
 
 ```bash
 docker pull rabbitmq:3-management-alpine
 ```
-
 ```bash
 docker run -e RABBITMQ_DEFAULT_USER=admin -e RABBITMQ_DEFAULT_PASS=admin --rm -it -p 15672:15672 -p 5672:5672 rabbitmq:3-management-alpine
 ```
 
-### Configuracion
+### Configuration
 
-Setear los valores de la configuración en los archivos .env en el root de cada servicio:
+Set the configuration values in the .env files in the root of each service:
 
 - `path-to-app\event_driven_arch\apps\loans-service\.env`
 - `path-to-app\event_driven_arch\apps\notifications-service\.env`
-
 - `path-to-app\event_driven_arch\apps\recovery-service\.env`
 
-Los valores por defecto están en el archivo `env.template` en cada uno de esos directorios, en el caso de que se hayan utilizado los valores tal cual están en este texto, con renombrar cada uno de esos archivos a `.env` será suficiente.
+The default values are in the `env.template` file in each of those directories. If the values used are as they are in this text, simply renaming each of these files to `.env` will suffice.
 
-### Instalar dependencias
+### Install Dependencies
 
-- Correr `npm i` en el root del workspace `path-to-app\event_driven_arch\`
+- Run `npm i` in the root of the workspace `path-to-app\event_driven_arch\`
 
-### Correr los servicios
+### Run the Services
 
-- Para correr el servicio de loans ejecutar en una consola `npx nx serve loans-service`
+- To run the loans service, execute in one console `npx nx serve loans-service`
 
-- Para correr el servicio de loans ejecutar en una consola `npx nx serve notifications-service`
+- To run the notifications service, execute in another console `npx nx serve notifications-service`
 
-- Para correr el servicio de recovery (que levanta la dead-letter queue) ejecutar en una consola `npx nx serve recovery-service`
+- To run the recovery service (which raises the dead-letter queue), execute in another console `npx nx serve recovery-service`
 
-Nota: Para instalar Nx global: `npm install --global nx@latest` (para no tener que usar npx en cada comando)
+Note: To install Nx globally: `npm install --global nx@latest` (so you don't have to use npx in every command)
 
-### Pruebas desde la REST API
+### Testing from the REST API
 
-Generar un loan con notificación exitosa:
+Generate a loan with successful notification:
 
 ```bash
 curl --location 'http://localhost:3000/api/' \
@@ -164,7 +161,7 @@ curl --location 'http://localhost:3000/api/' \
 }'
 ```
 
-Generar un loan con notificación fallida:
+Generate a loan with failed notification:
 
 ```bash
 curl --location 'http://localhost:3000/api/' \
@@ -174,7 +171,7 @@ curl --location 'http://localhost:3000/api/' \
 }'
 ```
 
-Generar un batch de n loans, 1 de cada 5 falla
+Generate a batch of n loans, 1 out of every 5 fails
 
 ```bash
 curl --location 'http://localhost:3000/api/batch' \
@@ -184,4 +181,4 @@ curl --location 'http://localhost:3000/api/batch' \
 }'
 ```
 
-Se puede observar en las consolas de los servicios la actividad generada en cada uno de ellos.
+Activity generated for each of the services can be observed in their respective consoles.
